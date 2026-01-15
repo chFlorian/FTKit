@@ -10,10 +10,10 @@ public class FTController: NSObject, ARSCNViewDelegate, ARSessionDelegate {
     }
     lazy var arConfiguration: ARConfiguration? = {
         guard ARFaceTrackingConfiguration.isSupported else { return nil }
-        let configuration = ARFaceTrackingConfiguration()
-        configuration.maximumNumberOfTrackedFaces = ARFaceTrackingConfiguration.supportedNumberOfTrackedFaces
-        configuration.isLightEstimationEnabled = true
-        return configuration
+        let arConfiguration = ARFaceTrackingConfiguration()
+        arConfiguration.maximumNumberOfTrackedFaces = configuration.numberOfTrackedFaces
+        arConfiguration.isLightEstimationEnabled = configuration.enableLightEstimate
+        return arConfiguration
     }()
     private var contentNode: SCNReferenceNode?
     
@@ -37,10 +37,14 @@ extension FTController {
     
 
     public func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor,
-              let currentFrame = sceneView?.session.currentFrame else { return }
+        guard let currentFrame = sceneView?.session.currentFrame else { return }
         
-        updateFaceGeometry(on: faceAnchor, with: node)
+        guard let faceAnchor = anchor as? ARFaceAnchor else {
+            let data = FTData(timestamp: getTimestamp(timestamp: currentFrame.timestamp),
+                              isTrackingFace: false)
+            self.configuration?.dataHandler?(data)
+            return
+        }
         
         let timestamp = getTimestamp(timestamp: currentFrame.timestamp)
         var blendShapes: [String : Double]? = nil
@@ -49,7 +53,9 @@ extension FTController {
         var distanceToScreen: Double? = nil
         var lookAtPoint: [String: Double]? = nil
         var faceGeometryVertices: [simd_float3]? = nil
+        let isTrackingFace = faceAnchor.isTracked
         
+        updateFaceGeometry(on: faceAnchor, with: node)
         
         if configuration.captureBlendShapes {
             blendShapes = getBlendShapes(on: faceAnchor)
@@ -80,7 +86,8 @@ extension FTController {
                           lightEstimate: lightEstimate,
                           distanceToScreen: distanceToScreen,
                           lookAtPoint: lookAtPoint,
-                          faceGeometryVertices: faceGeometryVertices)
+                          faceGeometryVertices: faceGeometryVertices,
+                          isTrackingFace: isTrackingFace)
         self.configuration?.dataHandler?(data)
     }
     

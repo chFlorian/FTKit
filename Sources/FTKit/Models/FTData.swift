@@ -9,8 +9,26 @@ public struct FTData: Codable {
     public let distanceToScreen: Double?
     public let lookAtPoint: [String: Double]?
     public let faceGeometryVertices: [simd_float3]?
+    /// Returns `false` if no `FaceAnchor` is detected, indicating that ARKit has not identified any faces.
+    public let isTrackingFace: Bool?
     
-    public static let csvHeader = "type,timestamp,blendshapes,lightestimate,distanceToScreen,lookAtPoint,faceGeometryVertices"
+    public static let csvHeader = "type,timestamp,blendshapes,lightestimate,distanceToScreen,lookAtPoint,faceGeometryVertices,isTrackingFace"
+    
+    public init(timestamp: Double,
+                blendShapes: [String : Double]? = nil,
+                lightEstimate: [String : Double]? = nil,
+                distanceToScreen: Double? = nil,
+                lookAtPoint: [String : Double]? = nil,
+                faceGeometryVertices: [simd_float3]? = nil,
+                isTrackingFace: Bool? = nil) {
+        self.timestamp = timestamp
+        self.blendShapes = blendShapes
+        self.lightEstimate = lightEstimate
+        self.distanceToScreen = distanceToScreen
+        self.lookAtPoint = lookAtPoint
+        self.faceGeometryVertices = faceGeometryVertices
+        self.isTrackingFace = isTrackingFace
+    }
     
     init(
         timestamp: Double,
@@ -34,8 +52,9 @@ public struct FTData: Codable {
         let distanceToScreenString = distanceToScreen.map { String($0) } ?? "nil"
         let lookAtPointString = lookAtPoint?.toString() ?? "[]"
         let faceGeometryVerticesString = "[" + (faceGeometryVertices?.map { $0.toString() }.joined(separator: " ") ?? "[]") + "]"
+        let isTrackingFaceString = (isTrackingFace ?? false) ? "True" : "False"
         
-        return "facetracking,\(timestamp),\(blendshapeString),\(lightEstimateString),\(distanceToScreenString),\(lookAtPointString),\(faceGeometryVerticesString)"
+        return "facetracking,\(timestamp),\(blendshapeString),\(lightEstimateString),\(distanceToScreenString),\(lookAtPointString),\(faceGeometryVerticesString),\(isTrackingFaceString)"
     }
 }
 
